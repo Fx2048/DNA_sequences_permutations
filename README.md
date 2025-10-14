@@ -3,8 +3,8 @@
 
 # information data:
 
-RESULTADOS_SUMMARY.csv
+[RESULTADOS_SUMMARY.csv](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/resultados_summary.csv)
 
-resultados.Vienna
+[resultados.Vienna](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/resultados.vienna)
 
-plots.zip
+[plots.zip](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/plots.zip)
