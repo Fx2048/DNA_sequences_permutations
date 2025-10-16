@@ -1,4 +1,4 @@
-# [DNA_sequences_permutations](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/adn_sequence.py)
+# [DNA_sequences_permutations Dr. Evangelista 1.0](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/adn_sequence.py)
 [Revisar adn_sequences.py](https://github.com/Fx2048/DNA_sequences_permutations/blob/main/adn_sequence.py)
 
 # information data:
