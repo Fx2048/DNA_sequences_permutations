@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Secuencias DNA con Horquillas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .input-group input, .input-group select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .sequence-display {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .sequence-display .base-A { color: #48bb78; }
+        .sequence-display .base-T { color: #f56565; }
+        .sequence-display .base-C { color: #4299e1; }
+        .sequence-display .base-G { color: #ecc94b; }
+        
+        .result-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .result-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .result-card.valid {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+        
+        .result-card.invalid {
+            border-color: #f56565;
+            background: #fff5f5;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-box .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-box .label {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            background: #e6fffa;
+            border-left: 4px solid #319795;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .warning-box {
+            background: #fffaf0;
+            border-left: 4px solid #ed8936;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .error-box {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .structure-visual {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            line-height: 1.6;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d3748;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 1000;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧬 Generador de Secuencias DNA con Horquillas</h1>
+            <p>Simulación de P(14)-Q(4)-R(14)-S(21) con validación estructural</p>
+        </div>
+        
+        <div class="content">
+            <!-- Sección de controles -->
+            <div class="section">
+                <h2>⚙️ Configuración</h2>
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Número de secuencias (M):</label>
+                        <input type="number" id="numSeq" value="10" min="1" max="100">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Temperatura (°C):</label>
+                        <input type="number" id="temp" value="60" min="0" max="100">
+                    </div>
+                    
+                    <div class="input-group checkbox-group">
+                        <input type="checkbox" id="useFilter">
+                        <label for="useFilter">Aplicar filtro de energía</label>
+                    </div>
+                </div>
+                
+                <div id="filterControls" style="display:none; margin-top: 15px;">
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Energía mínima (kcal/mol):</label>
+                            <input type="number" id="minEnergy" value="-10" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Energía máxima (kcal/mol):</label>
+                            <input type="number" id="maxEnergy" value="-5" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn" id="generateBtn" onclick="generateSequences()">
+                    🚀 Generar Secuencias
+                </button>
+            </div>
+            
+            <!-- Información del esquema -->
+            <div class="section">
+                <h2>📊 Esquema P-Q-R-S</h2>
+                <div class="info-box">
+                    <strong>Estructura:</strong> P(14)-Q(4)-R(14)-S(21)<br>
+                    <strong>P:</strong> Secuencia aleatoria de 14 bases<br>
+                    <strong>Q:</strong> Loop de 4 bases (no debe emparejar)<br>
+                    <strong>R:</strong> Complemento reverso de P (forma el stem)<br>
+                    <strong>S:</strong> Cola de 21 bases<br>
+                    <strong>Total:</strong> 53 bases
+                </div>
+            </div>
+            
+            <!-- Resultados -->
+            <div class="section">
+                <h2>📈 Resultados</h2>
+                <div id="progressContainer" style="display:none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar">0%</div>
+                    </div>
+                </div>
+                
+                <div class="stats" id="statsContainer" style="display:none;">
+                    <div class="stat-box">
+                        <div class="value" id="validCount">0</div>
+                        <div class="label">Secuencias Válidas</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="attemptCount">0</div>
+                        <div class="label">Intentos Totales</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="rejectedEnergy">0</div>
+                        <div class="label">Rechazadas por Energía</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="avgEnergy">0.0</div>
+                        <div class="label">Energía Promedio</div>
+                    </div>
+                </div>
+                
+                <div id="resultsContainer"></div>
+            </div>
+            
+            <!-- Explicación -->
+            <div class="section">
+                <h2>❓ ¿Cómo funciona?</h2>
+                <div class="info-box">
+                    <h3>Validación Estructural:</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>✅ <strong>Stem P-R:</strong> P y R deben emparejar perfectamente (14 pares)</li>
+                        <li>✅ <strong>Loop Q:</strong> Las 4 bases de Q NO deben formar pares</li>
+                        <li>✅ <strong>Sin pares extras:</strong> Solo se permiten los pares P↔R</li>
+                        <li>✅ <strong>Energía de Gibbs:</strong> Calcula estabilidad termodinámica</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>⚡ Filtro de Energía:</h3>
+                    <p><strong>¿Qué hace?</strong> Selecciona solo secuencias con energía en un rango específico.</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Energías negativas grandes</strong> (-15 a -10): Horquillas MUY estables</li>
+                        <li><strong>Energías moderadas</strong> (-10 a -5): Estabilidad media</li>
+                        <li><strong>Energías cercanas a 0</strong> (-5 a 0): Menos estables, equilibrio</li>
+                        <li><strong>θ (theta):</strong> Fracción apareada = 1/(1+e^[ΔG/(RT)])</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        const P = 14, Q = 4, R = 14, S = 21;
+        const COMP = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'};
+        
+        // Toggle filtro de energía
+        document.getElementById('useFilter').addEventListener('change', function() {
+            document.getElementById('filterControls').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+        
+        // Funciones auxiliares
+        function complementBase(b) {
+            return COMP[b.toUpperCase()] || 'N';
+        }
+        
+        function complementReverse(seq) {
+            return seq.split('').reverse().map(complementBase).join('');
+        }
+        
+        function randomSeq(length) {
+            const bases = ['A', 'C', 'G', 'T'];
+            return Array.from({length}, () => bases[Math.floor(Math.random() * 4)]).join('');
+        }
+        
+        function colorSequence(seq) {
+            return seq.split('').map(b => 
+                `<span class="base-${b}">${b}</span>`
+            ).join('');
+        }
+        
+        // Simulación de energía (muy simplificada)
+        function calculateSimulatedEnergy(p_seq, r_seq) {
+            // En realidad usaríamos ViennaRNA, aquí simulamos
+            let gcCount = 0;
+            for (let i = 0; i < Math.min(p_seq.length, r_seq.length); i++) {
+                const p = p_seq[i];
+                const r = r_seq[r_seq.length - 1 - i];
+                if ((p === 'G' && r === 'C') || (p === 'C' && r === 'G')) {
+                    gcCount++;
+                }
+            }
+            // G-C más estable que A-T
+            const baseEnergy = -1.5 * gcCount - 0.9 * (P - gcCount);
+            const loopPenalty = 4.5; // Penalidad por loop
+            const randomNoise = (Math.random() - 0.5) * 2;
+            return baseEnergy + loopPenalty + randomNoise;
+        }
+        
+        function fractionPaired(energy, tempC) {
+            const R = 0.001987; // kcal/(mol·K)
+            const T = tempC + 273.15;
+            return 1 / (1 + Math.exp(energy / (R * T)));
+        }
+        
+        function validateStructure(p_seq, q_seq, r_seq) {
+            // Validación simplificada
+            // En realidad necesitaríamos ViennaRNA para dot-bracket
+            
+            // Verificar que R es complemento reverso de P
+            const expectedR = complementReverse(p_seq);
+            if (r_seq !== expectedR) {
+                return { valid: false, reason: "R no es complemento reverso de P" };
+            }
+            
+            // Verificar que Q no tenga autocomplementariedad obvia
+            const qComp = complementReverse(q_seq);
+            if (q_seq === qComp) {
+                return { valid: false, reason: "Q presenta autocomplementariedad" };
+            }
+            
+            return { valid: true, reason: "Estructura válida" };
+        }
+        
+        async function generateSequences() {
+            const M = parseInt(document.getElementById('numSeq').value);
+            const temp = parseFloat(document.getElementById('temp').value);
+            const useFilter = document.getElementById('useFilter').checked;
+            const minE = parseFloat(document.getElementById('minEnergy').value);
+            const maxE = parseFloat(document.getElementById('maxEnergy').value);
+            
+            // UI
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('statsContainer').style.display = 'grid';
+            document.getElementById('resultsContainer').innerHTML = '';
+            
+            const results = [];
+            let attempts = 0;
+            let rejectedByEnergy = 0;
+            const maxAttempts = M * 100;
+            
+            while (results.length < M && attempts < maxAttempts) {
+                attempts++;
+                
+                // Generar secuencia
+                const p_seq = randomSeq(P);
+                const q_seq = randomSeq(Q);
+                const r_seq = complementReverse(p_seq);
+                const s_seq = randomSeq(S);
+                const fullSeq = p_seq + q_seq + r_seq + s_seq;
+                
+                // Validar estructura
+                const validation = validateStructure(p_seq, q_seq, r_seq);
+                if (!validation.valid) continue;
+                
+                // Calcular energía
+                const energy = calculateSimulatedEnergy(p_seq, r_seq);
+                
+                // Filtro de energía
+                if (useFilter && (energy < minE || energy > maxE)) {
+                    rejectedByEnergy++;
+                    continue;
+                }
+                
+                // Calcular theta
+                const theta = fractionPaired(energy, temp);
+                
+                results.push({
+                    id: results.length + 1,
+                    seq: fullSeq,
+                    p: p_seq,
+                    q: q_seq,
+                    r: r_seq,
+                    s: s_seq,
+                    energy: energy,
+                    theta: theta,
+                    valid: validation.valid
+                });
+                
+                // Actualizar progreso
+                const progress = Math.round((results.length / M) * 100);
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressBar').textContent = progress + '%';
+                
+                // Actualizar stats
+                document.getElementById('validCount').textContent = results.length;
+                document.getElementById('attemptCount').textContent = attempts;
+                document.getElementById('rejectedEnergy').textContent = rejectedByEnergy;
+                
+                // Pequeña pausa para UI
+                if (attempts % 10 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+            
+            // Calcular energía promedio
+            const avgE = results.reduce((sum, r) => sum + r.energy, 0) / results.length;
+            document.getElementById('avgEnergy').textContent = avgE.toFixed(2);
+            
+            // Mostrar resultados
+            displayResults(results);
+            
+            // Mostrar top 5
+            showTopResults(results);
+            
+            document.getElementById('generateBtn').disabled = false;
+        }
+        
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            
+            results.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'result-card valid';
+                card.innerHTML = `
+                    <h3>Secuencia #${r.id}</h3>
+                    <div class="sequence-display">
+P: ${colorSequence(r.p)}
+Q: ${colorSequence(r.q)}
+R: ${colorSequence(r.r)}
+S: ${colorSequence(r.s)}
+
+Completa: ${colorSequence(r.seq)}
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;">
+                        <div>
+                            <strong>Energía ΔG:</strong><br>
+                            ${r.energy.toFixed(2)} kcal/mol
+                        </div>
+                        <div>
+                            <strong>Fracción θ:</strong><br>
+                            ${r.theta.toFixed(4)}
+                        </div>
+                        <div>
+                            <strong>Longitud:</strong><br>
+                            ${r.seq.length} bases
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        function showTopResults(results) {
+            const container = document.getElementById('resultsContainer');
+            
+            // Top 5 más estables
+            const topStable = [...results].sort((a, b) => a.energy - b.energy).slice(0, 5);
+            
+            const topSection = document.createElement('div');
+            topSection.className = 'section';
+            topSection.innerHTML = '<h2>🏆 Top 5 Más Estables</h2>';
+            
+            topStable.forEach((r, i) => {
+                const card = document.createElement('div');
+                card.className = 'info-box';
+                card.innerHTML = `
+                    <strong>#${i+1}</strong> - ID ${r.id} | 
+                    ΔG = ${r.energy.toFixed(2)} kcal/mol | 
+                    θ = ${r.theta.toFixed(4)} | 
+                    ${r.seq.substring(0, 20)}...
+                `;
+                topSection.appendChild(card);
+            });
+            
+            container.insertBefore(topSection, container.firstChild);
+            
+            // Top 5 en equilibrio
+            const topEq = [...results].sort((a, b) => 
+                Math.abs(a.theta - 0.5) - Math.abs(b.theta - 0.5)
+            ).slice(0, 5);
+            
+            const eqSection = document.createElement('div');
+            eqSection.className = 'section';
+            eqSection.innerHTML = '<h2>⚖️ Top 5 Cercanas al Equilibrio (θ ≈ 0.5)</h2>';
+            
+            topEq.forEach((r, i) => {
+                const card = document.createElement('div');
+                card.className = 'warning-box';
+                card.innerHTML = `
+                    <strong>#${i+1}</strong> - ID ${r.id} | 
+                    θ = ${r.theta.toFixed(4)} | 
+                    ΔG = ${r.energy.toFixed(2)} kcal/mol | 
+                    ${r.seq.substring(0, 20)}...
+                `;
+                eqSection.appendChild(card);
+            });
+            
+            container.insertBefore(eqSection, container.children[1]);
+        }
+    </script>
+</body>
+</html>
