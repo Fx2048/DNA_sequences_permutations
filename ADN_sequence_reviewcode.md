@@ -356,6 +356,15 @@ Intentos: ~500-1500
 
 ---
 
+| Aspecto                  | Nivel en tu Código (usando ViennaRNA) | Comparación con Estándares/Alternativas | Notas |
+|--------------------------|---------------------------------------|-----------------------------------------|-------|
+| **Precisión**           | Alta para ARN (MCC ~0.7-0.8 en benchmarks); media para ADN (aproximación). Valida estrictamente estructuras. | Superior a métodos antiguos; inferior a DL como UFold (MCC >0.85, más preciso en datos anotados). ViennaRNA outperforms en termodinámica pura. | Preciso para hairpins simples, pero errores en ADN (parámetros RNA-specific). Fuentes: , . |
+| **Velocidad**           | Media-baja: O(n³) por RNAfold (n=longitud ~53 nt, rápido por seq); pero generación aleatoria puede tomar minutos para M=100 (miles de intentos). | RNAfold es eficiente (segundos por seq); más lento que DL (UFold: ms por seq). Tu código secuencial; no paralelo. | Lento si tasa de aceptación baja (<1%); optimiza con menos aleatoriedad. Fuentes: , . |
+| **Energía (Cálculo de ΔG)** | Basado en modelo Turner (empírico, preciso para ΔG en ARN). Filtra efectivamente. | Estándar oro para termodinámica; pero para ADN, menos preciso (necesita ajustes como en UNAFold). Alternativas: RNAstructure similar. | Buen para estimaciones, pero no exacto para ADN puro. Fuentes: , . |
+| **Validación Estructural** | Alta: Comparación exacta de pares; detecta extras/faltantes/no-permitidos. | Más estricta que promedio (muchos tools solo predicen, no validan vs diseño). Similar a custom scripts en bioinfo. | Robusta para hairpins, pero ignora ensembles (posibles estructuras alternativas). Fuentes: , . |
+| **Motor Termodinámico** | ViennaRNA: DP exacto con parámetros medidos (Turner rules); calcula MFE y ΔG. | Altamente preciso y ampliamente usado; integra datos experimentales. Inferior a híbridos DL+termo (e.g., BPfold: integra DL para mejor generalización). | Excelente para predicción basada en física; soporta temperaturas custom. Fuentes: , , . |
+
+
 ### ✅ **CONCLUSIONES**
 
 **El código SÍ cumple con:**
@@ -375,3 +384,18 @@ Intentos: ~500-1500
 - 🎯 Permite seleccionar rangos de estabilidad específicos
 - 🎯 Aumenta el número de intentos necesarios
 - 🎯 Útil para aplicaciones que requieren propiedades termodinámicas precisas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+¿
