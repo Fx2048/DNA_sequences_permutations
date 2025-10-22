@@ -1,0 +1,68 @@
+graph TD
+    Start([Start: RNA Hairpin Generator]) --> Input[/"User Input:<br/>M sequences to generate<br/>Energy filter: min/max kcal/mol<br/>(optional)"/]
+    
+    Input --> Params["<b>Fixed Parameters:</b><br/>P = 14 bases (stem 5')<br/>Q = 4 bases (loop)<br/>R = 14 bases (stem 3')<br/>S = 21 bases (tail)<br/>Total length = 53 nt"]
+    
+    Params --> ToolCheck{ViennaRNA tools<br/>installed?<br/>RNAfold, RNAplot}
+    ToolCheck -->|No| Error1[/"Error: Missing tools"/]
+    ToolCheck -->|Yes| GhostCheck{Ghostscript<br/>installed?}
+    
+    GhostCheck -->|No| Warn1[/"Warning: PNG disabled<br/>PS only"/]
+    GhostCheck -->|Yes| GenLoop["<b>Generation Loop</b><br/>(max 10,000 attempts)"]
+    
+    Warn1 --> GenLoop
+    
+    GenLoop --> GenSeq["<b>1. Generate Random Sequence</b><br/>P: 14 random bases (A/C/G/T)<br/>Q: 4 random bases<br/>R: reverse complement of P<br/>S: 21 random bases<br/><br/><i>Computational Energy:</i><br/>Random number generation"]
+    
+    GenSeq --> CheckDup{Sequence<br/>already seen?}
+    CheckDup -->|Yes| GenLoop
+    CheckDup -->|No| RNAfold["<b>2. RNAfold Prediction</b><br/>(ViennaRNA 2.7.0)<br/>Temperature: 60°C<br/><br/><i>Input:</i> DNA sequence (53 nt)<br/><i>Process:</i> Minimum free energy<br/>structure prediction<br/><i>Algorithm:</i> Dynamic programming<br/>(Zuker algorithm)<br/><br/><i>Output:</i><br/>• Dot-bracket notation<br/>• ΔG (kcal/mol)<br/><br/><i>Computational Energy:</i><br/>O(n³) time complexity"]
+    
+    RNAfold --> ParseStruct["<b>3. Parse Structure</b><br/>Convert dot-bracket to<br/>base pair indices<br/>'(' paired with ')'<br/>'.' unpaired"]
+    
+    ParseStruct --> ValidStruct["<b>4. Structure Validation</b><br/><br/><i>Check 1:</i> Designed pairs<br/>P[i] pairs with R[13-i]<br/>(14 Watson-Crick pairs)<br/><br/><i>Check 2:</i> No extra pairs<br/><br/><i>Check 3:</i> Loop Q unpaired<br/>(no internal structure)"]
+    
+    ValidStruct --> Valid{Structure<br/>valid?}
+    Valid -->|No| Reject1[/"Reject: Invalid structure<br/>(extra/missing pairs)"/]
+    Reject1 --> CheckCount1
+    
+    Valid -->|Yes| EnergyFilter{Energy filter<br/>enabled?}
+    EnergyFilter -->|No| CalcTheta
+    EnergyFilter -->|Yes| CheckEnergy{ΔG within<br/>range?}
+    
+    CheckEnergy -->|No| Reject2[/"Reject: Outside energy range"/]
+    Reject2 --> CheckCount1
+    
+    CheckEnergy -->|Yes| CalcTheta["<b>5. Calculate Fraction Paired</b><br/><br/>θ = 1 / (1 + e^(ΔG/RT))<br/><br/>R = 0.001987 kcal/(mol·K)<br/>T = 333.15 K (60°C)<br/><br/><i>Output:</i> θ (0-1)<br/>θ ≈ 1: fully paired<br/>θ ≈ 0.5: equilibrium<br/>θ ≈ 0: unpaired"]
+    
+    CalcTheta --> GenPlot["<b>6. Generate Visualization</b><br/><br/><i>RNAplot:</i><br/>• Creates PS/EPS file<br/>• 2D structure layout<br/><br/><i>Ghostscript (if available):</i><br/>• Converts PS → PNG<br/>• Resolution: 300 DPI<br/><br/><i>Files:</i><br/>plots/seq_N_ss.ps<br/>plots/seq_N.png"]
+    
+    GenPlot --> StoreResult["<b>7. Store Result</b><br/><br/>Record contains:<br/>• ID number<br/>• Full sequence (53 nt)<br/>• Structure (dot-bracket)<br/>• ΔG (kcal/mol)<br/>• θ (fraction paired)<br/>• File paths (PS, PNG)"]
+    
+    StoreResult --> CheckCount1{M sequences<br/>generated?}
+    CheckCount1 -->|No| GenLoop
+    CheckCount1 -->|Yes| SaveFiles
+    
+    CheckCount1 -->|Max attempts<br/>reached| SaveFiles["<b>8. Save Output Files</b><br/><br/><i>resultados.vienna:</i><br/>Sequence<br/>Structure (ΔG)<br/><br/><i>resultados_summary.csv:</i><br/>ID, seq, struct, energy,<br/>theta, ps_path, png_path"]
+    
+    SaveFiles --> Rank1["<b>9. Rank by Stability</b><br/>(Top 5)<br/><br/>Sort by ΔG (ascending)<br/>Most negative = most stable<br/><br/><i>Biological significance:</i><br/>Lower ΔG indicates<br/>thermodynamically<br/>favorable structures"]
+    
+    Rank1 --> Rank2["<b>10. Rank by Equilibrium</b><br/>(Top 5)<br/><br/>Sort by |θ - 0.5|<br/>Closest to 0.5 = equilibrium<br/><br/><i>Biological significance:</i><br/>θ ≈ 0.5 indicates structures<br/>with balanced folded/unfolded<br/>populations at 60°C"]
+    
+    Rank2 --> Summary[/"<b>Output Summary:</b><br/><br/>• Total sequences generated<br/>• Rejection statistics<br/>• PNG generation status<br/>• Top 5 by stability<br/>• Top 5 by equilibrium<br/>• Output file locations"/]
+    
+    Summary --> End([End])
+    
+    style Start fill:#e1f5e1
+    style End fill:#e1f5e1
+    style Input fill:#fff4e6
+    style Params fill:#e6f3ff
+    style RNAfold fill:#ffe6f0
+    style CalcTheta fill:#f0e6ff
+    style GenPlot fill:#fff0e6
+    style SaveFiles fill:#e6ffe6
+    style Summary fill:#fff4e6
+    style Error1 fill:#ffcccc
+    style Reject1 fill:#ffcccc
+    style Reject2 fill:#ffcccc
+    style Warn1 fill:#ffffcc
